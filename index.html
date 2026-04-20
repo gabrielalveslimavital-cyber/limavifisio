@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LIMAVI">
+<meta name="application-name" content="LIMAVI Fisioterapia">
+<meta name="theme-color" content="#1a2424">
+<meta name="description" content="Sistema clínico LIMAVI Fisioterapia">
+<title>LIMAVI FISIOTERAPIA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#1a6b6b; --teal-light:#2a9090; --teal-pale:#e8f4f4; --teal-mid:#c2e0e0;
+  --gold:#b8936a; --gold-light:#d4a97c; --cream:#faf8f5; --dark:#1a2424;
+  --gray:#6b7b7b; --gray-light:#f0f3f3; --white:#ffffff; --danger:#c0392b;
+  --shadow:0 4px 24px rgba(26,107,107,0.10); --shadow-lg:0 8px 40px rgba(26,107,107,0.15);
+  --radius:14px; --radius-sm:8px; --sidebar-w:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overscroll-behavior:none;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);
+  background:var(--dark);display:flex;flex-direction:column;z-index:200;
+  padding-bottom:max(24px,env(safe-area-inset-bottom));
+  transition:transform .28s cubic-bezier(.4,0,.2,1);will-change:transform;
+}
+body.sb-closed .sidebar{transform:translateX(calc(-1 * var(--sidebar-w)));}
+
+/* Desktop push layout */
+@media(min-width:1024px){
+  body:not(.sb-closed) .main{margin-left:var(--sidebar-w);}
+  .sidebar-overlay{display:none!important;}
+}
+/* Mobile overlay */
+@media(max-width:1023px){
+  .main{margin-left:0!important;}
+}
+.sidebar-overlay{
+  position:fixed;inset:0;z-index:199;
+  background:rgba(26,36,36,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .28s;
+}
+body:not(.sb-closed) .sidebar-overlay{opacity:1;pointer-events:all;}
+
+.logo-wrap{
+  padding:max(20px,env(safe-area-inset-top)) 20px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;gap:12px;
+}
+.logo-icon{width:42px;height:42px;flex-shrink:0;background:linear-gradient(135deg,var(--teal),var(--teal-light));border-radius:11px;display:flex;align-items:center;justify-content:center;}
+.logo-icon svg{width:24px;height:24px;}
+.logo-text{line-height:1.1;overflow:hidden;}
+.logo-text span{display:block;white-space:nowrap;}
+.logo-text .l1{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--white);letter-spacing:1.5px;}
+.logo-text .l2{font-size:8.5px;font-weight:500;color:var(--gold-light);letter-spacing:2.5px;text-transform:uppercase;}
+
+nav{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;}
+.nav-btn{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;
+  cursor:pointer;border:none;background:none;color:rgba(255,255,255,.55);font-size:13.5px;
+  font-weight:500;font-family:'DM Sans',sans-serif;transition:all .18s;text-align:left;width:100%;
+  white-space:nowrap;min-height:44px;
+}
+.nav-btn svg{flex-shrink:0;opacity:.7;}
+.nav-btn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);}
+.nav-btn.active{background:linear-gradient(135deg,var(--teal),var(--teal-light));color:var(--white);box-shadow:0 4px 16px rgba(26,107,107,.4);}
+.nav-btn.active svg{opacity:1;}
+.sidebar-footer{padding:0 20px;color:rgba(255,255,255,.2);font-size:10px;line-height:1.6;white-space:nowrap;}
+
+/* Install banner */
+.install-banner{
+  margin:10px 10px 0;padding:12px 14px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(184,147,106,.25),rgba(184,147,106,.1));
+  border:1px solid rgba(184,147,106,.35);display:none;flex-direction:column;gap:8px;
+}
+.install-banner.vis{display:flex;}
+.install-banner p{font-size:11px;color:rgba(255,255,255,.75);line-height:1.5;}
+.install-banner button{
+  padding:8px;border-radius:8px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  color:white;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;
+}
+
+/* ===== HAMBURGER ===== */
+.hamburger{
+  width:40px;height:40px;border-radius:10px;border:none;
+  background:var(--teal-pale);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;flex-shrink:0;transition:background .15s;
+}
+.hamburger:hover{background:var(--teal-mid);}
+.hamburger span{display:block;width:18px;height:2px;background:var(--teal);border-radius:2px;transition:all .25s cubic-bezier(.4,0,.2,1);transform-origin:center;}
+body:not(.sb-closed) .hamburger span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+body:not(.sb-closed) .hamburger span:nth-child(2){opacity:0;transform:scaleX(0);}
+body:not(.sb-closed) .hamburger span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* ===== MAIN ===== */
+.main{min-height:100vh;margin-left:0;transition:margin-left .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(250,248,245,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--teal-mid);
+  padding:10px 18px;
+  padding-top:max(10px,env(safe-area-inset-top));
+  display:flex;align-items:center;justify-content:space-between;min-height:58px;gap:10px;
+}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0;}
+.topbar h1{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar .sub{font-size:11px;color:var(--gray);margin-top:1px;}
+@media(max-width:480px){.topbar h1{font-size:18px;}.topbar .sub{display:none;}}
+
+/* ===== BUTTONS ===== */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;
+  transition:all .18s;letter-spacing:.3px;white-space:nowrap;min-height:40px;
+}
+.btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal-light));color:white;box-shadow:0 3px 14px rgba(26,107,107,.3);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,107,107,.4);}
+.btn-outline{background:transparent;color:var(--teal);border:1.5px solid var(--teal-mid);}
+.btn-outline:hover{background:var(--teal-pale);}
+.btn-danger{background:var(--danger);color:white;}
+.btn-sm{padding:7px 13px;font-size:12px;min-height:34px;}
+
+/* ===== CONTENT ===== */
+.content{padding:18px;flex:1;}
+@media(min-width:768px){.content{padding:26px 30px;}}
+.page{display:none;} .page.active{display:block;}
+
+/* ===== STATS ===== */
+.stats-row{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:18px;}
+@media(min-width:440px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border-left:4px solid var(--teal);display:flex;align-items:center;gap:14px;}
+.stat-card.gold{border-left-color:var(--gold);} .stat-card.dark{border-left-color:var(--dark);}
+.stat-icon{width:42px;height:42px;border-radius:10px;background:var(--teal-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stat-icon.gold{background:#f5ede3;} .stat-icon.dark{background:#e8ebeb;}
+.stat-num{font-size:26px;font-weight:700;color:var(--dark);line-height:1;}
+.stat-label{font-size:11px;color:var(--gray);margin-top:3px;}
+
+/* ===== CARD ===== */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--teal-mid);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:linear-gradient(90deg,var(--teal-pale),var(--white));}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--dark);}
+.card-header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--gray-light);border-radius:8px;padding:8px 12px;}
+.search-box input{border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);width:120px;}
+@media(min-width:600px){.search-box input{width:190px;}}
+
+/* Table responsive */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:540px;}
+th{text-align:left;padding:10px 14px;font-size:10.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--gray);background:var(--gray-light);border-bottom:1px solid var(--teal-mid);}
+td{padding:12px 14px;border-bottom:1px solid var(--teal-pale);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;} tr:hover td{background:var(--teal-pale);}
+
+/* Mobile patient cards */
+.patient-card-m{display:none;padding:14px 16px;border-bottom:1px solid var(--teal-pale);cursor:pointer;transition:background .12s;}
+.patient-card-m:hover{background:var(--teal-pale);}
+.patient-card-m:last-child{border-bottom:none;}
+@media(max-width:640px){
+  .table-wrap table{display:none;}
+  .patient-card-m{display:flex;align-items:center;gap:13px;}
+}
+
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.badge-active{background:#d5f0e3;color:#1a7a3f;} .badge-inactive{background:#fde8e8;color:#c0392b;}
+
+/* ===== MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(26,36,36,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;}
+@media(min-width:600px){.modal-overlay{align-items:center;padding:20px;}}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);width:100%;max-height:92vh;display:flex;flex-direction:column;animation:mobIn .25s ease;padding-bottom:max(0px,env(safe-area-inset-bottom));}
+@media(min-width:600px){.modal{border-radius:18px;max-width:760px;animation:deskIn .22s ease;}}
+@keyframes deskIn{from{opacity:0;transform:translateY(18px) scale(.97);}to{opacity:1;transform:none;}}
+@keyframes mobIn{from{transform:translateY(100%);}to{transform:none;}}
+.modal-handle{width:38px;height:4px;border-radius:2px;background:var(--teal-mid);margin:10px auto 0;flex-shrink:0;}
+@media(min-width:600px){.modal-handle{display:none;}}
+.modal-header{padding:16px 22px;border-bottom:1px solid var(--teal-mid);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,var(--teal-pale),var(--white));}
+.modal-header h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;}
+.modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--gray-light);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--gray);}
+.modal-close:hover{background:var(--teal-mid);}
+.modal-body{padding:18px 22px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--teal-mid);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+@media(max-width:400px){.modal-footer{flex-direction:column-reverse;}.modal-footer .btn{width:100%;justify-content:center;}}
+
+/* ===== FORMS ===== */
+.form-grid{display:grid;grid-template-columns:1fr;gap:13px;}
+@media(min-width:480px){.form-grid{grid-template-columns:1fr 1fr;}}
+.form-full{grid-column:1/-1;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;font-weight:600;color:var(--gray);letter-spacing:.5px;text-transform:uppercase;}
+.form-group input,.form-group select,.form-group textarea{
+  padding:11px 13px;border-radius:8px;border:1.5px solid var(--teal-mid);outline:none;
+  font-family:'DM Sans',sans-serif;font-size:15px;color:var(--dark);background:var(--cream);
+  transition:border .15s;-webkit-appearance:none;appearance:none;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal);background:var(--white);}
+.form-group textarea{resize:vertical;min-height:78px;}
+.form-section-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:var(--teal);padding:10px 0 3px;border-bottom:1px solid var(--teal-mid);grid-column:1/-1;}
+
+/* ===== PATIENT DETAIL ===== */
+.patient-header{background:linear-gradient(135deg,var(--teal) 0%,var(--teal-light) 100%);border-radius:var(--radius);padding:20px 22px;color:white;display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;box-shadow:var(--shadow-lg);flex-wrap:wrap;}
+.patient-avatar{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;border:3px solid rgba(255,255,255,.4);flex-shrink:0;}
+.patient-info{flex:1;min-width:0;}
+.patient-info h2{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;}
+.patient-info p{font-size:12px;opacity:.8;margin-top:4px;}
+.patient-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.patient-meta span{background:rgba(255,255,255,.15);padding:3px 10px;border-radius:20px;font-size:11px;}
+
+.tabs{display:flex;gap:3px;margin-bottom:16px;background:var(--gray-light);padding:4px;border-radius:10px;}
+.tab-btn{flex:1;padding:9px 4px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;background:none;color:var(--gray);transition:all .15s;min-height:40px;}
+.tab-btn.active{background:var(--white);color:var(--teal);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.tab-pane{display:none;} .tab-pane.active{display:block;}
+
+/* ===== EVOLUÇÕES ===== */
+.evo-list{display:flex;flex-direction:column;gap:11px;}
+.evo-card{background:var(--white);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid var(--teal);position:relative;}
+.evo-card.editing{border-left-color:var(--gold);}
+.evo-date{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;}
+.evo-num{font-size:10px;color:var(--gray);}
+.evo-text{font-size:13px;line-height:1.7;color:var(--dark);margin-top:5px;white-space:pre-wrap;padding-right:58px;}
+.evo-actions{position:absolute;top:10px;right:12px;display:flex;gap:4px;}
+.evo-actions button{width:30px;height:30px;border-radius:7px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--gray-light);color:var(--gray);transition:all .15s;}
+.evo-actions button:hover{background:var(--teal-mid);color:var(--teal);}
+.evo-editor{width:100%;border:1.5px solid var(--teal);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.7;resize:vertical;min-height:78px;outline:none;margin-top:5px;}
+.new-evo-card{background:var(--teal-pale);border-radius:12px;padding:14px 16px;border:2px dashed var(--teal-mid);}
+
+/* ===== AGENDA ===== */
+.agenda-grid{display:grid;grid-template-columns:1fr;gap:18px;}
+@media(min-width:860px){.agenda-grid{grid-template-columns:1fr 300px;}}
+.calendar-wrap{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,var(--teal),var(--teal-light));color:white;}
+.cal-header h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;}
+.cal-nav{background:rgba(255,255,255,.2);border:none;color:white;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);background:var(--gray-light);border-bottom:1px solid var(--teal-mid);}
+.cal-days-header span{text-align:center;padding:7px 2px;font-size:9.5px;font-weight:700;color:var(--gray);letter-spacing:.5px;text-transform:uppercase;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:50px;padding:6px 4px;border-right:1px solid var(--teal-pale);border-bottom:1px solid var(--teal-pale);cursor:pointer;transition:background .12s;}
+@media(min-width:600px){.cal-cell{min-height:64px;padding:8px;}}
+.cal-cell:hover{background:var(--teal-pale);}
+.cal-cell.today{background:var(--teal-pale);}
+.cal-cell.today .cal-day-num{background:var(--teal);color:white;}
+.cal-cell.other-month{opacity:.35;}
+.cal-cell.selected{background:var(--teal-mid);}
+.cal-day-num{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--dark);}
+.cal-event-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;margin:1px;}
+.cal-event-dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px;}
+
+.agenda-sidebar{display:flex;flex-direction:column;gap:12px;}
+.day-events-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.day-events-header{padding:13px 16px;background:var(--teal-pale);border-bottom:1px solid var(--teal-mid);}
+.day-events-header h4{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:var(--dark);}
+.event-list{padding:10px;display:flex;flex-direction:column;gap:7px;}
+.event-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:9px;background:var(--gray-light);border-left:3px solid var(--teal);}
+.event-time{font-size:11px;font-weight:700;color:var(--teal);flex-shrink:0;min-width:38px;}
+.event-name{font-size:12.5px;font-weight:600;color:var(--dark);}
+.event-type{font-size:10px;color:var(--gray);}
+.event-del{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--gray);font-size:14px;padding:4px;}
+.event-del:hover{color:var(--danger);}
+.no-events{padding:22px;text-align:center;color:var(--gray);font-size:13px;}
+
+/* ===== ANAMNESE VIEW ===== */
+.anamnese-view{display:grid;grid-template-columns:1fr;gap:11px;}
+@media(min-width:560px){.anamnese-view{grid-template-columns:1fr 1fr;}}
+.anamnese-field .label{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.anamnese-field .value{font-size:13px;color:var(--dark);background:var(--gray-light);border-radius:6px;padding:8px 12px;min-height:34px;}
+.anamnese-full{grid-column:1/-1;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:max(22px,env(safe-area-inset-bottom));right:18px;z-index:999;background:var(--teal);color:white;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .3s;max-width:calc(100vw - 36px);}
+.toast.show{transform:none;opacity:1;}
+
+/* ===== BACK BTN ===== */
+.back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--teal);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:14px;background:none;border:none;font-family:'DM Sans',sans-serif;padding:6px 0;min-height:44px;}
+.back-btn:hover{opacity:.7;}
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head>
+<body class="sb-closed">
+
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <div class="logo-icon">
+      <svg viewBox="0 0 26 26" fill="none">
+        <circle cx="13" cy="13" r="9" fill="none" stroke="white" stroke-width="1.5" opacity=".4"/>
+        <line x1="13" y1="7" x2="13" y2="13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <line x1="13" y1="13" x2="17.5" y2="16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="13" cy="13" r="2" fill="#b8936a"/>
+        <path d="M13 3.5V2M11 3L13 2 15 3" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="logo-text"><span class="l1">LIMAVI</span><span class="l2">Fisioterapia</span></div>
+  </div>
+
+  <div class="install-banner" id="install-banner">
+    <p>📲 Adicione à tela inicial para usar como app!</p>
+    <button onclick="installPWA()">⬇️ Instalar App</button>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" onclick="navAndClose('dashboard')" id="nb-dashboard">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-btn" onclick="navAndClose('patients')" id="nb-patients">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Pacientes
+    </button>
+    <button class="nav-btn" onclick="navAndClose('agenda')" id="nb-agenda">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Agenda
+    </button>
+  </nav>
+
+  <div class="sidebar-footer"><div>© 2025 LIMAVI Fisioterapia<br>Sistema clínico v2.0</div></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" onclick="toggleSidebar()" title="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <h1 id="page-title">Dashboard</h1>
+        <div class="sub" id="page-sub">Bem-vindo ao sistema LIMAVI</div>
+      </div>
+    </div>
+    <div id="topbar-actions"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a6b6b" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div><div class="stat-num" id="stat-patients">0</div><div class="stat-label">Pacientes</div></div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8936a" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div><div class="stat-num" id="stat-today">0</div><div class="stat-label">Sessões hoje</div></div>
+        </div>
+        <div class="stat-card dark">
+          <div class="stat-icon dark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a2424" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div><div class="stat-num" id="stat-evos">0</div><div class="stat-label">Evoluções</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Próximas sessões</span></div>
+        <div id="dash-upcoming" style="padding:14px 16px;"></div>
+      </div>
+    </div>
+
+    <!-- PATIENTS -->
+    <div class="page" id="page-patients">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Pacientes</span>
+          <div class="card-header-actions">
+            <div class="search-box">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7b7b" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" id="patient-search" placeholder="Buscar..." oninput="filterPatients()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openNewPatientModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Paciente</th><th>Idade</th><th>Diagnóstico</th><th>Telefone</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="patients-tbody"><tr><td colspan="6" style="text-align:center;padding:36px;color:#6b7b7b;">Nenhum paciente cadastrado ainda.</td></tr></tbody>
+          </table>
+        </div>
+        <div id="patients-mobile"></div>
+      </div>
+    </div>
+
+    <!-- PATIENT DETAIL -->
+    <div class="page" id="page-patient-detail">
+      <button class="back-btn" onclick="showPage('patients')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Voltar à lista
+      </button>
+      <div id="patient-header-content"></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(0)">📋 Anamnese</button>
+        <button class="tab-btn" onclick="switchTab(1)">📈 Evoluções</button>
+      </div>
+      <div class="tab-pane active" id="tab-anamnese"></div>
+      <div class="tab-pane" id="tab-evolucao"></div>
+    </div>
+
+    <!-- AGENDA -->
+    <div class="page" id="page-agenda">
+      <div class="agenda-grid">
+        <div class="calendar-wrap">
+          <div class="cal-header">
+            <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+            <h3 id="cal-month-label"></h3>
+            <button class="cal-nav" onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="cal-days-header">
+            <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="agenda-sidebar">
+          <button class="btn btn-primary" onclick="openAddEventModal()" style="width:100%;justify-content:center;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Adicionar Sessão
+          </button>
+          <div class="day-events-card">
+            <div class="day-events-header"><h4 id="day-events-label">Selecione um dia</h4></div>
+            <div id="day-events-list" class="event-list"><div class="no-events">Clique em um dia</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL: PACIENTE -->
+<div class="modal-overlay" id="modal-patient">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="modal-patient-title">Novo Paciente</h2>
+      <button class="modal-close" onclick="closeModal('modal-patient')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <span class="form-section-title">Dados Pessoais</span>
+        <div class="form-group form-full"><label>Nome completo *</label><input type="text" id="p-nome" placeholder="Nome do paciente" autocomplete="name"></div>
+        <div class="form-group"><label>Data de nascimento</label><input type="date" id="p-nasc"></div>
+        <div class="form-group"><label>Sexo</label><select id="p-sexo"><option value="">Selecionar</option><option>Masculino</option><option>Feminino</option><option>Outro</option></select></div>
+        <div class="form-group"><label>CPF</label><input type="text" id="p-cpf" placeholder="000.000.000-00" inputmode="numeric"></div>
+        <div class="form-group"><label>Telefone</label><input type="tel" id="p-tel" placeholder="(00) 00000-0000"></div>
+        <div class="form-group form-full"><label>Endereço</label><input type="text" id="p-end" placeholder="Rua, número, bairro"></div>
+        <div class="form-group"><label>Profissão</label><input type="text" id="p-prof"></div>
+        <div class="form-group"><label>Estado civil</label><select id="p-ecivil"><option value="">Selecionar</option><option>Solteiro(a)</option><option>Casado(a)</option><option>Divorciado(a)</option><option>Viúvo(a)</option></select></div>
+        <span class="form-section-title">Anamnese Fisioterapêutica</span>
+        <div class="form-group form-full"><label>Diagnóstico / Queixa principal *</label><input type="text" id="p-diag" placeholder="Ex: Lombalgia crônica, AVC..."></div>
+        <div class="form-group form-full"><label>História da doença atual (HDA)</label><textarea id="p-hda" placeholder="Início, evolução e características da queixa..."></textarea></div>
+        <div class="form-group form-full"><label>Histórico médico / Comorbidades</label><textarea id="p-hist" placeholder="HAS, DM, cirurgias, internações..."></textarea></div>
+        <div class="form-group form-full"><label>Medicamentos em uso</label><textarea id="p-meds" placeholder="Nome e dosagem..."></textarea></div>
+        <div class="form-group"><label>Dor (EVA 0–10)</label><input type="number" id="p-eva" min="0" max="10" placeholder="0" inputmode="numeric"></div>
+        <div class="form-group"><label>Localização da dor</label><input type="text" id="p-dor-local" placeholder="Ex: Lombar, joelho dir..."></div>
+        <div class="form-group form-full"><label>Exame físico / Avaliação inicial</label><textarea id="p-exame" placeholder="Força muscular, ADM, postura, marcha..."></textarea></div>
+        <div class="form-group form-full"><label>Objetivos do tratamento</label><textarea id="p-obj" placeholder="Redução da dor, ganho de força..."></textarea></div>
+        <div class="form-group form-full"><label>Observações</label><textarea id="p-obs" placeholder="Informações adicionais..."></textarea></div>
+        <span class="form-section-title">Status</span>
+        <div class="form-group"><label>Status</label><select id="p-status"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer" id="modal-patient-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-patient')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePatient()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SESSÃO -->
+<div class="modal-overlay" id="modal-event">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>Adicionar Sessão</h2>
+      <button class="modal-close" onclick="closeModal('modal-event')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full"><label>Paciente *</label><select id="ev-patient"><option value="">Selecionar paciente</option></select></div>
+        <div class="form-group"><label>Data *</label><input type="date" id="ev-date"></div>
+        <div class="form-group"><label>Horário *</label><input type="time" id="ev-time"></div>
+        <div class="form-group form-full"><label>Tipo de sessão</label><select id="ev-type"><option>Fisioterapia</option><option>Avaliação</option><option>Reavaliação</option><option>Pilates clínico</option><option>Outro</option></select></div>
+        <div class="form-group form-full"><label>Observações</label><textarea id="ev-obs" style="min-height:58px;" placeholder="Opcional..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-event')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEvent()">📅 Agendar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+let state={patients:[],events:[],calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),selectedDay:null};
+let editingPid=null;
+
+function save(){try{localStorage.setItem('limavi_v2',JSON.stringify(state));}catch(e){}}
+function load(){
+  try{
+    const s=localStorage.getItem('limavi_v2')||localStorage.getItem('limavi_state');
+    if(s){const p=JSON.parse(s);state.patients=p.patients||[];state.events=p.events||[];}
+  }catch(e){}
+}
+load();
+
+// ===== PWA =====
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById('install-banner').classList.add('vis');
+});
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('install-banner').classList.remove('vis');
+  deferredPrompt=null;toast('✅ App instalado!');
+});
+function installPWA(){
+  if(!deferredPrompt){toast('💡 Chrome: Menu (⋮) → "Adicionar à tela inicial"');return;}
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(r=>{
+    if(r.outcome==='accepted')toast('✅ App instalado!');
+    deferredPrompt=null;document.getElementById('install-banner').classList.remove('vis');
+  });
+}
+
+// ===== NAV =====
+function showPage(pg){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const pid=pg==='patient-detail'?'page-patient-detail':'page-'+pg;
+  document.getElementById(pid).classList.add('active');
+  const nb=document.getElementById('nb-'+(pg==='patient-detail'?'patients':pg));
+  if(nb)nb.classList.add('active');
+  const T={dashboard:'Dashboard',patients:'Pacientes',agenda:'Agenda','patient-detail':'Ficha do Paciente'};
+  const S={dashboard:'Visão geral da clínica',patients:'Gerencie seus pacientes',agenda:'Sessões e horários','patient-detail':'Anamnese e evoluções'};
+  document.getElementById('page-title').textContent=T[pg]||'';
+  document.getElementById('page-sub').textContent=S[pg]||'';
+  document.getElementById('topbar-actions').innerHTML=pg==='patients'
+    ?`<button class="btn btn-primary btn-sm" onclick="openNewPatientModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo</button>`:'';
+  if(pg==='agenda')renderCalendar();
+  if(pg==='dashboard')renderDashboard();
+}
+function navAndClose(pg){showPage(pg);if(window.innerWidth<1024)document.body.classList.add('sb-closed');}
+function toggleSidebar(){document.body.classList.toggle('sb-closed');}
+
+// ===== UTILS =====
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function calcAge(nasc){if(!nasc)return'';const t=new Date(),b=new Date(nasc);let a=t.getFullYear()-b.getFullYear();if(t<new Date(t.getFullYear(),b.getMonth(),b.getDate()))a--;return a;}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+// ===== PATIENT FORM =====
+function clearForm(){
+  ['p-nome','p-cpf','p-tel','p-end','p-prof','p-diag','p-hda','p-hist','p-meds','p-eva','p-dor-local','p-exame','p-obj','p-obs'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('p-nasc').value='';document.getElementById('p-sexo').value='';
+  document.getElementById('p-ecivil').value='';document.getElementById('p-status').value='Ativo';
+}
+function fillForm(p){
+  document.getElementById('p-nome').value=p.nome||'';document.getElementById('p-nasc').value=p.nasc||'';
+  document.getElementById('p-sexo').value=p.sexo||'';document.getElementById('p-cpf').value=p.cpf||'';
+  document.getElementById('p-tel').value=p.tel||'';document.getElementById('p-end').value=p.end||'';
+  document.getElementById('p-prof').value=p.prof||'';document.getElementById('p-ecivil').value=p.ecivil||'';
+  document.getElementById('p-diag').value=p.diag||'';document.getElementById('p-hda').value=p.hda||'';
+  document.getElementById('p-hist').value=p.hist||'';document.getElementById('p-meds').value=p.meds||'';
+  document.getElementById('p-eva').value=p.eva||'';document.getElementById('p-dor-local').value=p.dorLocal||'';
+  document.getElementById('p-exame').value=p.exame||'';document.getElementById('p-obj').value=p.obj||'';
+  document.getElementById('p-obs').value=p.obs||'';document.getElementById('p-status').value=p.status||'Ativo';
+}
+function getForm(){
+  return{
+    nome:document.getElementById('p-nome').value.trim(),nasc:document.getElementById('p-nasc').value,
+    age:calcAge(document.getElementById('p-nasc').value),sexo:document.getElementById('p-sexo').value,
+    cpf:document.getElementById('p-cpf').value,tel:document.getElementById('p-tel').value,
+    end:document.getElementById('p-end').value,prof:document.getElementById('p-prof').value,
+    ecivil:document.getElementById('p-ecivil').value,diag:document.getElementById('p-diag').value,
+    hda:document.getElementById('p-hda').value,hist:document.getElementById('p-hist').value,
+    meds:document.getElementById('p-meds').value,eva:document.getElementById('p-eva').value,
+    dorLocal:document.getElementById('p-dor-local').value,exame:document.getElementById('p-exame').value,
+    obj:document.getElementById('p-obj').value,obs:document.getElementById('p-obs').value,
+    status:document.getElementById('p-status').value
+  };
+}
+function setModalFooter(isEdit,id){
+  document.getElementById('modal-patient-footer').innerHTML=`
+    <button class="btn btn-outline" onclick="closeModal('modal-patient')">Cancelar</button>
+    <button class="btn btn-primary" onclick="savePatient()">💾 ${isEdit?'Salvar Alterações':'Salvar Paciente'}</button>`;
+}
+function openNewPatientModal(){editingPid=null;clearForm();document.getElementById('modal-patient-title').textContent='Novo Paciente';setModalFooter(false);openModal('modal-patient');}
+function openEditPatientModal(id){
+  editingPid=id;const p=state.patients.find(x=>x.id===id);if(!p)return;
+  fillForm(p);document.getElementById('modal-patient-title').textContent='Editar Paciente';setModalFooter(true);openModal('modal-patient');
+}
+function savePatient(){
+  const data=getForm();if(!data.nome){toast('⚠️ Informe o nome do paciente.');return;}
+  if(editingPid){
+    const idx=state.patients.findIndex(x=>x.id===editingPid);if(idx<0)return;
+    const evos=state.patients[idx].evolucoes||[];
+    state.patients[idx]={...state.patients[idx],...data,evolucoes:evos};
+    save();closeModal('modal-patient');renderPatients();
+    if(document.getElementById('page-patient-detail').classList.contains('active'))openPatient(editingPid);
+    toast('✅ Paciente atualizado!');
+  } else {
+    state.patients.push({id:Date.now().toString(),...data,evolucoes:[],createdAt:new Date().toISOString()});
+    save();closeModal('modal-patient');renderPatients();toast('✅ Paciente cadastrado!');
+  }
+}
+
+// ===== RENDER PATIENTS =====
+function pRow(p){
+  return`<tr>
+    <td><div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1a6b6b,#2a9090);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0;">${p.nome.charAt(0).toUpperCase()}</div>
+      <div><div style="font-weight:600;font-size:13px;">${p.nome}</div><div style="font-size:10.5px;color:#6b7b7b;">${p.cpf||'—'}</div></div></div></td>
+    <td>${p.age?p.age+' a':'—'}</td>
+    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.diag||'—'}</td>
+    <td>${p.tel||'—'}</td>
+    <td><span class="badge ${p.status==='Ativo'?'badge-active':'badge-inactive'}">${p.status}</span></td>
+    <td><div style="display:flex;gap:4px;">
+      <button class="btn btn-outline btn-sm" onclick="openPatient('${p.id}')">Ver ficha</button>
+      <button class="btn btn-sm" style="background:var(--teal-pale);color:var(--teal);border:none;cursor:pointer;" onclick="openEditPatientModal('${p.id}')">✏️</button>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b;border:none;cursor:pointer;" onclick="deletePatient('${p.id}')">✕</button>
+    </div></td>
+  </tr>`;
+}
+function pCardM(p){
+  return`<div class="patient-card-m" onclick="openPatient('${p.id}')">
+    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a6b6b,#2a9090);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:17px;flex-shrink:0;">${p.nome.charAt(0).toUpperCase()}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:600;font-size:14px;">${p.nome}</div>
+      <div style="font-size:11.5px;color:#6b7b7b;margin-top:2px;">${p.diag||'Sem diagnóstico'}</div>
+      <div style="display:flex;gap:8px;margin-top:5px;align-items:center;">
+        <span class="badge ${p.status==='Ativo'?'badge-active':'badge-inactive'}">${p.status}</span>
+        ${p.age?`<span style="font-size:11px;color:#6b7b7b;">${p.age} anos</span>`:''}
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;flex-shrink:0;" onclick="event.stopPropagation()">
+      <button class="btn btn-sm" style="background:var(--teal-pale);color:var(--teal);border:none;cursor:pointer;" onclick="openEditPatientModal('${p.id}')">✏️</button>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b;border:none;cursor:pointer;" onclick="deletePatient('${p.id}')">✕</button>
+    </div>
+  </div>`;
+}
+function renderPatients(list){
+  const pts=list||state.patients;
+  const tbody=document.getElementById('patients-tbody');
+  const mob=document.getElementById('patients-mobile');
+  if(!pts.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:36px;color:#6b7b7b;">Nenhum paciente ainda.</td></tr>';
+    mob.innerHTML='<div style="text-align:center;padding:28px;color:#6b7b7b;font-size:13px;">Nenhum paciente ainda.</div>';return;
+  }
+  tbody.innerHTML=pts.map(pRow).join('');
+  mob.innerHTML=pts.map(pCardM).join('');
+}
+function filterPatients(){
+  const q=document.getElementById('patient-search').value.toLowerCase();
+  renderPatients(state.patients.filter(p=>p.nome.toLowerCase().includes(q)||(p.diag&&p.diag.toLowerCase().includes(q))));
+}
+function deletePatient(id){
+  if(!confirm('Remover este paciente?'))return;
+  state.patients=state.patients.filter(p=>p.id!==id);save();renderPatients();toast('🗑️ Paciente removido.');
+}
+
+// ===== PATIENT DETAIL =====
+function openPatient(id){
+  state.currentPid=id;const p=state.patients.find(x=>x.id===id);if(!p)return;
+  document.getElementById('patient-header-content').innerHTML=`
+    <div class="patient-header">
+      <div class="patient-avatar">${p.nome.charAt(0).toUpperCase()}</div>
+      <div class="patient-info">
+        <h2>${p.nome}</h2><p>${p.diag||'Sem diagnóstico informado'}</p>
+        <div class="patient-meta">
+          ${p.age?`<span>🎂 ${p.age} anos</span>`:''}${p.sexo?`<span>${p.sexo}</span>`:''}${p.tel?`<span>📞 ${p.tel}</span>`:''}
+          <span style="background:${p.status==='Ativo'?'rgba(39,174,96,.25)':'rgba(192,57,43,.25)'}">${p.status==='Ativo'?'✅':'⏸'} ${p.status}</span>
+        </div>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);margin-left:auto;align-self:flex-start;" onclick="openEditPatientModal('${p.id}')">✏️ Editar</button>
+    </div>`;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('.tab-pane').forEach((el,i)=>el.classList.toggle('active',i===0));
+  renderAnamnese(p);renderEvolucoes(p);showPage('patient-detail');
+}
+function switchTab(idx){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab-pane').forEach((el,i)=>el.classList.toggle('active',i===idx));
+}
+
+// ===== ANAMNESE =====
+function renderAnamnese(p){
+  const f=(l,v)=>`<div class="anamnese-field"><div class="label">${l}</div><div class="value">${v||'<span style="opacity:.4">Não informado</span>'}</div></div>`;
+  const ff=(l,v)=>`<div class="anamnese-field anamnese-full"><div class="label">${l}</div><div class="value" style="white-space:pre-wrap;min-height:42px;">${v||'<span style="opacity:.4">Não informado</span>'}</div></div>`;
+  document.getElementById('tab-anamnese').innerHTML=`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-outline btn-sm" onclick="openEditPatientModal('${p.id}')">✏️ Editar anamnese</button>
+    </div>
+    <div class="anamnese-view">
+      ${f('Nome',p.nome)}${f('Data de Nasc.',p.nasc?new Date(p.nasc+'T00:00').toLocaleDateString('pt-BR'):'')}
+      ${f('Sexo',p.sexo)}${f('Idade',p.age?p.age+' anos':'')}
+      ${f('CPF',p.cpf)}${f('Telefone',p.tel)}
+      ${ff('Endereço',p.end)}
+      ${f('Profissão',p.prof)}${f('Estado civil',p.ecivil)}
+      ${ff('Diagnóstico / Queixa principal',p.diag)}
+      ${ff('História da doença atual',p.hda)}
+      ${ff('Histórico médico / Comorbidades',p.hist)}
+      ${ff('Medicamentos em uso',p.meds)}
+      ${f('Dor (EVA)',p.eva!==undefined&&p.eva!==''?p.eva+'/10':'')}${f('Localização da dor',p.dorLocal)}
+      ${ff('Exame físico / Avaliação inicial',p.exame)}
+      ${ff('Objetivos do tratamento',p.obj)}
+      ${ff('Observações',p.obs)}
+    </div>`;
+}
+
+// ===== EVOLUÇÕES =====
+function renderEvolucoes(p){
+  const evos=p.evolucoes||[];
+  const now=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('tab-evolucao').innerHTML=`
+    <div class="new-evo-card" style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:8px;">📝 Nova evolução — ${now}</div>
+      <textarea id="new-evo-text" class="evo-editor" style="margin-top:0;" placeholder="Descreva a sessão: condutas, resposta do paciente, progressão..."></textarea>
+      <div style="margin-top:10px;"><button class="btn btn-primary btn-sm" onclick="addEvo('${p.id}')">💾 Registrar evolução</button></div>
+    </div>
+    <div class="evo-list">
+      ${!evos.length?'<div style="text-align:center;padding:26px;color:#6b7b7b;font-size:13px;">Nenhuma evolução ainda.</div>'
+        :evos.slice().reverse().map((e,i)=>`
+          <div class="evo-card" id="evo-${e.id}">
+            <div class="evo-actions">
+              <button onclick="editEvoStart('${p.id}','${e.id}')" title="Editar">✏️</button>
+              <button onclick="deleteEvo('${p.id}','${e.id}')" style="color:#c0392b;">🗑</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="evo-date">${e.date}</span>
+              <span class="evo-num">Sessão ${evos.length-i}</span>
+            </div>
+            <div class="evo-text" id="evo-text-${e.id}">${esc(e.text)}</div>
+          </div>`).join('')
+      }
+    </div>`;
+}
+function addEvo(pid){
+  const txt=document.getElementById('new-evo-text').value.trim();
+  if(!txt){toast('⚠️ Escreva o conteúdo da evolução.');return;}
+  const p=state.patients.find(x=>x.id===pid);if(!p)return;
+  if(!p.evolucoes)p.evolucoes=[];
+  p.evolucoes.push({id:Date.now().toString(),date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),text:txt});
+  save();renderEvolucoes(p);toast('✅ Evolução registrada!');
+}
+function editEvoStart(pid,eid){
+  const p=state.patients.find(x=>x.id===pid);const evo=p.evolucoes.find(e=>e.id===eid);
+  document.getElementById('evo-'+eid).classList.add('editing');
+  document.getElementById('evo-text-'+eid).innerHTML=`
+    <textarea class="evo-editor" id="edit-ta-${eid}" style="width:100%;">${evo.text}</textarea>
+    <div style="margin-top:8px;display:flex;gap:8px;">
+      <button class="btn btn-primary btn-sm" onclick="editEvoSave('${pid}','${eid}')">💾 Salvar</button>
+      <button class="btn btn-outline btn-sm" onclick="renderEvolucoes(state.patients.find(x=>x.id==='${pid}'))">Cancelar</button>
+    </div>`;
+}
+function editEvoSave(pid,eid){
+  const p=state.patients.find(x=>x.id===pid);const evo=p.evolucoes.find(e=>e.id===eid);
+  const val=document.getElementById('edit-ta-'+eid).value.trim();if(!val)return;
+  evo.text=val;save();renderEvolucoes(p);toast('✅ Evolução atualizada!');
+}
+function deleteEvo(pid,eid){
+  if(!confirm('Excluir esta evolução?'))return;
+  const p=state.patients.find(x=>x.id===pid);p.evolucoes=p.evolucoes.filter(e=>e.id!==eid);
+  save();renderEvolucoes(p);toast('🗑️ Evolução excluída.');
+}
+
+// ===== AGENDA =====
+const MNS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function renderCalendar(){
+  const{calYear:y,calMonth:m}=state;
+  document.getElementById('cal-month-label').textContent=`${MNS[m]} ${y}`;
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),today=new Date();
+  for(let i=0;i<first;i++){
+    const d=new Date(y,m,-first+i+1).getDate();
+    const c=document.createElement('div');c.className='cal-cell other-month';c.innerHTML=`<span class="cal-day-num">${d}</span>`;grid.appendChild(c);
+  }
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isT=today.getDate()===d&&today.getMonth()===m&&today.getFullYear()===y;
+    const isSel=state.selectedDay===ds;
+    const c=document.createElement('div');c.className=`cal-cell${isT?' today':''}${isSel?' selected':''}`;
+    const evs=state.events.filter(e=>e.date===ds);
+    c.innerHTML=`<span class="cal-day-num">${d}</span><div class="cal-event-dots">${evs.map(()=>'<span class="cal-event-dot"></span>').join('')}</div>`;
+    c.onclick=()=>{state.selectedDay=ds;renderCalendar();};grid.appendChild(c);
+  }
+  if(state.selectedDay)renderDayEvents(state.selectedDay);
+}
+function changeMonth(dir){
+  state.calMonth+=dir;if(state.calMonth<0){state.calMonth=11;state.calYear--;}if(state.calMonth>11){state.calMonth=0;state.calYear++;}
+  renderCalendar();
+}
+function renderDayEvents(ds){
+  const[y,m,d]=ds.split('-');
+  document.getElementById('day-events-label').textContent=`Sessões — ${d}/${m}/${y}`;
+  const evs=state.events.filter(e=>e.date===ds).sort((a,b)=>a.time.localeCompare(b.time));
+  const cont=document.getElementById('day-events-list');
+  if(!evs.length){cont.innerHTML='<div class="no-events">Sem sessões neste dia.</div>';return;}
+  cont.innerHTML=evs.map(ev=>{
+    const p=state.patients.find(x=>x.id===ev.patientId);
+    return`<div class="event-item">
+      <div class="event-time">${ev.time}</div>
+      <div style="flex:1;min-width:0;"><div class="event-name">${p?p.nome:'Paciente removido'}</div><div class="event-type">${ev.type}</div>${ev.obs?`<div style="font-size:10px;color:#6b7b7b;margin-top:2px;">${ev.obs}</div>`:''}</div>
+      <button class="event-del" onclick="deleteEvent('${ev.id}','${ds}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function openAddEventModal(){
+  const sel=document.getElementById('ev-patient');
+  sel.innerHTML='<option value="">Selecionar paciente</option>'+state.patients.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  if(state.selectedDay)document.getElementById('ev-date').value=state.selectedDay;
+  document.getElementById('ev-time').value='';document.getElementById('ev-obs').value='';
+  openModal('modal-event');
+}
+function saveEvent(){
+  const pid=document.getElementById('ev-patient').value,date=document.getElementById('ev-date').value,time=document.getElementById('ev-time').value;
+  if(!pid||!date||!time){toast('⚠️ Preencha paciente, data e horário.');return;}
+  state.events.push({id:Date.now().toString(),patientId:pid,date,time,type:document.getElementById('ev-type').value,obs:document.getElementById('ev-obs').value});
+  save();closeModal('modal-event');state.selectedDay=date;renderCalendar();toast('📅 Sessão agendada!');
+}
+function deleteEvent(id,ds){
+  state.events=state.events.filter(e=>e.id!==id);save();renderCalendar();if(state.selectedDay)renderDayEvents(state.selectedDay);toast('🗑️ Sessão removida.');
+}
+
+// ===== DASHBOARD =====
+function renderDashboard(){
+  document.getElementById('stat-patients').textContent=state.patients.length;
+  const ts=new Date().toISOString().slice(0,10);
+  document.getElementById('stat-today').textContent=state.events.filter(e=>e.date===ts).length;
+  document.getElementById('stat-evos').textContent=state.patients.reduce((a,p)=>a+(p.evolucoes?p.evolucoes.length:0),0);
+  const up=state.events.filter(e=>e.date>=ts).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)).slice(0,8);
+  const cont=document.getElementById('dash-upcoming');
+  if(!up.length){cont.innerHTML='<div style="text-align:center;padding:26px;color:#6b7b7b;font-size:13px;">Nenhuma sessão futura agendada.</div>';return;}
+  cont.innerHTML=`<div style="overflow-x:auto;"><table style="width:100%"><thead><tr><th>Paciente</th><th>Data</th><th>Hora</th><th>Tipo</th></tr></thead><tbody>${up.map(ev=>{
+    const p=state.patients.find(x=>x.id===ev.patientId);const[y,m,d]=ev.date.split('-');
+    return`<tr><td style="font-weight:600;">${p?p.nome:'—'}</td><td>${d}/${m}/${y}</td><td>${ev.time}</td><td><span class="badge badge-active">${ev.type}</span></td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+// ===== SERVICE WORKER =====
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js')
+      .then(()=>console.log('SW registrado'))
+      .catch(e=>console.log('SW erro:',e));
+  });
+}
+
+if(window.innerWidth>=1024)document.body.classList.remove('sb-closed');
+window.addEventListener('resize',()=>{if(window.innerWidth>=1024)document.body.classList.remove('sb-closed');});
+renderPatients();renderDashboard();
+</script>
+</body>
+</html>
